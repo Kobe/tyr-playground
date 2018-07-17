@@ -6,7 +6,9 @@ import org.awaitility.Awaitility
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import javax.jms.*
+import javax.jms.JMSException
+import javax.jms.Session
+import javax.jms.TextMessage
 
 class X2CanReceiveMessages {
 
@@ -16,6 +18,8 @@ class X2CanReceiveMessages {
     }
 
     val connectionFactory = ActiveMQConnectionFactory()
+
+    var messageReceived = false
 
     @Before
     fun setUp() {
@@ -38,12 +42,12 @@ class X2CanReceiveMessages {
 
     @Test
     fun canListenForMessages() {
-        sendMessage("HelloQueue", "Hello World")
+        sendMessage("HelloQueue2", "Hello World")
 
-        registerListener("HelloQueue")
+        registerListener("HelloQueue2")
 
         Awaitility.await().until {
-            false
+            messageReceived
         }
     }
 
@@ -115,6 +119,16 @@ class X2CanReceiveMessages {
         // Create a MessageConsumer from the Session to the Topic or Queue
         val consumer = session.createConsumer(destination)
 
-        TODO("implementiere einen Listener, um hier nicht zu pollen")
+        //consumer.setMessageListener({ it -> messageReceived = true; })
+        consumer.setMessageListener {
+            val textMessage = it as TextMessage
+
+            try {
+                println("Consumer " + Thread.currentThread().name + " received message: " + textMessage.text)
+                messageReceived = true
+            } catch (e: JMSException) {
+                e.printStackTrace()
+            }
+        }
     }
 }

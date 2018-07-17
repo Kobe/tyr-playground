@@ -7,7 +7,9 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import java.util.*
-import javax.jms.*
+import javax.jms.MessageListener
+import javax.jms.Session
+import javax.jms.TextMessage
 
 class X3MessagesAreRetried {
 
@@ -73,7 +75,7 @@ class X3MessagesAreRetried {
         connection.start()
 
         // Create a Session
-        val session = connection.createSession(false, Session.CLIENT_ACKNOWLEDGE)
+        val session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE)
 
         // Create the destination (Topic or Queue)
         val destination = session.createQueue(queue)
@@ -85,8 +87,6 @@ class X3MessagesAreRetried {
 
         consumer.messageListener = MessageListener {
             val tm = it as TextMessage
-
-            it.acknowledge()
 
             tryCount++
             if (tryCount < 3) throw RuntimeException("temp failure")
